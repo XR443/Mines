@@ -1,7 +1,8 @@
 package com.github.raspopov.ui;
 
-import com.github.raspopov.service.FieldCreator;
+import com.github.raspopov.utils.MinesCountEvent;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import javax.swing.*;
@@ -11,6 +12,9 @@ import java.text.NumberFormat;
 @Component
 @Primary
 public class ButtonsPanelWithSizeFields extends ButtonsPanel {
+
+    private final JLabel minesCountLabel;
+    private final JLabel flaggedMinesCountLabel;
 
     public ButtonsPanelWithSizeFields(MinesPanel minesPanel) {
         super();
@@ -46,6 +50,16 @@ public class ButtonsPanelWithSizeFields extends ButtonsPanel {
             updateUI();
         });
 
+
+        this.flaggedMinesCountLabel = new JLabel("0");
+        innerPanel.add(flaggedMinesCountLabel);
+
+        JLabel split = new JLabel("/");
+        innerPanel.add(split);
+
+        this.minesCountLabel = new JLabel("0");
+        innerPanel.add(minesCountLabel);
+
         setBorder(BorderFactory.createLineBorder(Color.BLACK));
     }
 
@@ -54,5 +68,12 @@ public class ButtonsPanelWithSizeFields extends ButtonsPanel {
         numberInstance.setMinimumIntegerDigits(1);
         numberInstance.setMaximumIntegerDigits(3);
         return numberInstance;
+    }
+
+    @EventListener
+    public void updateMinesCount(MinesCountEvent minesCountEvent) {
+        flaggedMinesCountLabel.setText(String.valueOf(minesCountEvent.flaggedMinesCount()));
+        minesCountLabel.setText(String.valueOf(minesCountEvent.minesCount()));
+        updateUI();
     }
 }

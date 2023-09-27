@@ -3,6 +3,7 @@ package com.github.raspopov.ui;
 import com.github.raspopov.domain.Cell;
 import com.github.raspopov.domain.Field;
 import com.github.raspopov.service.FieldCreator;
+import com.github.raspopov.utils.FlaggedMinesCount;
 import org.springframework.stereotype.Component;
 
 import javax.swing.*;
@@ -15,16 +16,18 @@ public class MinesPanel extends JPanel {
 
     private final JPanel innerPanel;
     private final FieldCreator fieldCreator;
+    private final FlaggedMinesCount flaggedMinesCount;
     private Field field;
 
     private Map<Cell, CellButton> cellToButton;
 
-    public MinesPanel(FieldCreator fieldCreator) {
+    public MinesPanel(FieldCreator fieldCreator, FlaggedMinesCount flaggedMinesCount) {
         super();
         innerPanel = new JPanel();
         add(innerPanel, BorderLayout.CENTER);
         setBorder(BorderFactory.createLineBorder(Color.BLACK));
         this.fieldCreator = fieldCreator;
+        this.flaggedMinesCount = flaggedMinesCount;
     }
 
     public void createMinesField(Field field) {
@@ -38,6 +41,7 @@ public class MinesPanel extends JPanel {
             cellToButton.clear();
         cellToButton = null;
         this.field = null;
+        flaggedMinesCount.clear();
         updateUI();
     }
 
@@ -48,7 +52,8 @@ public class MinesPanel extends JPanel {
 
         ButtonActionListener buttonActionListener;
         if (field == null) {
-            buttonActionListener = new ButtonActionListener(width, height, fieldCreator,
+            buttonActionListener = new ButtonActionListener(flaggedMinesCount,
+                    width, height, fieldCreator,
                     cellToButton,
                     () -> {
                         clear();
@@ -57,7 +62,8 @@ public class MinesPanel extends JPanel {
                     },
                     this::clear);
         } else {
-            buttonActionListener = new ButtonActionListener(field,
+            buttonActionListener = new ButtonActionListener(flaggedMinesCount,
+                    field,
                     cellToButton,
                     () -> {
                         clear();

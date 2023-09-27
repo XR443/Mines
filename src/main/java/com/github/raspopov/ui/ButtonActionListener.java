@@ -2,6 +2,7 @@ package com.github.raspopov.ui;
 
 import com.github.raspopov.domain.*;
 import com.github.raspopov.service.FieldCreator;
+import com.github.raspopov.utils.FlaggedMinesCount;
 import lombok.extern.log4j.Log4j2;
 
 import javax.swing.*;
@@ -23,6 +24,7 @@ public class ButtonActionListener extends MouseAdapter implements ActionListener
     private int width;
     private int height;
     private FieldCreator fieldCreator;
+    private final FlaggedMinesCount flaggedMinesCount;
     private final Map<Cell, CellButton> cellToButton;
 
     private final Runnable againCallback;
@@ -33,20 +35,24 @@ public class ButtonActionListener extends MouseAdapter implements ActionListener
     private final Color notAllMinesFind = new Color(255, 172, 172);
     private final Color allMinesFind = new Color(172, 255, 172);
 
-    public ButtonActionListener(Field field,
+    public ButtonActionListener(FlaggedMinesCount flaggedMinesCount,
+                                Field field,
                                 Map<Cell, CellButton> cellToButton,
                                 Runnable againCallback,
                                 Runnable cancelCallback) {
+        this.flaggedMinesCount = flaggedMinesCount;
         this.field = field;
         this.cellToButton = cellToButton;
         this.againCallback = againCallback;
         this.cancelCallback = cancelCallback;
     }
 
-    public ButtonActionListener(int width, int height, FieldCreator fieldCreator,
+    public ButtonActionListener(FlaggedMinesCount flaggedMinesCount,
+                                int width, int height, FieldCreator fieldCreator,
                                 Map<Cell, CellButton> cellToButton,
                                 Runnable againCallback,
                                 Runnable cancelCallback) {
+        this.flaggedMinesCount = flaggedMinesCount;
         this.width = width;
         this.height = height;
         this.fieldCreator = fieldCreator;
@@ -145,11 +151,15 @@ public class ButtonActionListener extends MouseAdapter implements ActionListener
 //                cellButton.setForeground(Color.BLUE);
 //                cellButton.setBackground(flagColor);
                     cellButton.setEnabled(false);
+
+                    flaggedMinesCount.increment();
                 } else {
                     cellButton.setText(null);
 //                cellButton.setForeground(Color.BLACK);
 //                cellButton.setBackground(backgroundColor);
                     cellButton.setEnabled(true);
+
+                    flaggedMinesCount.decrement();
                 }
             }
         }

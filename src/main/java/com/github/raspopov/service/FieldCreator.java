@@ -2,6 +2,7 @@ package com.github.raspopov.service;
 
 import com.github.raspopov.domain.Cell;
 import com.github.raspopov.domain.Field;
+import com.github.raspopov.utils.FlaggedMinesCount;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 public class FieldCreator {
 
     private final Mines mines;
+    private final FlaggedMinesCount flaggedMinesCount;
 
     public Field createField() {
         Field field = mines.createField(20, 20, 0.2);
@@ -19,6 +21,7 @@ public class FieldCreator {
 //                                    new Cell(2, 1),
 //                                    new Cell(2, 2)
 //                            ));
+        flaggedMinesCount.setMinesCount(field.getMines().size());
         return field;
     }
 
@@ -30,6 +33,8 @@ public class FieldCreator {
 //                        new Cell(2, 2)
 //                ));
 //        return field;
-        return mines.createField(width, height, 0.2, cellToExclude);
+        Field field = mines.createField(width, height, 0.2, cellToExclude);
+        flaggedMinesCount.setMinesCount(field.getMines().size());
+        return field;
     }
 }
