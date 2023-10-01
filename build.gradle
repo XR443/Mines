@@ -1,5 +1,7 @@
 plugins {
     id 'java'
+    id 'org.springframework.boot' version '3.1.4'
+    id "edu.sc.seis.launch4j" version "3.0.5"
 }
 
 repositories {
@@ -21,4 +23,12 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+bootJar {
+    mainClass = 'com.github.raspopov.MinesMain'
+}
+
+launch4j {
+    mainClassName = 'com.github.raspopov.MinesMain'
 }
