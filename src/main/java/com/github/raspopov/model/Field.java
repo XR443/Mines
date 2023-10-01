@@ -3,12 +3,10 @@ package com.github.raspopov.model;
 import com.github.raspopov.exceptions.CellOutOfBoundsException;
 import com.github.raspopov.exceptions.GameNotInProgressException;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,7 +30,7 @@ public class Field {
     private Boolean win;
 
     public Field(int width, int height, Set<Cell> mines) {
-        this(width,height,mines,new HashSet<>());
+        this(width, height, mines, new HashSet<>());
     }
 
     public Field(int width, int height, Set<Cell> mines, Set<Cell> cells) {
@@ -54,9 +52,10 @@ public class Field {
         }
 
         CellInfo cellInfo = getCellInfo(cellToProcess);
+        if (!cells.get(cellToProcess).isOpen())
+            openedCells.incrementAndGet();
         cells.get(cellToProcess).open();
         cellToProcess.open();
-        openedCells.incrementAndGet();
         moves.add(cellToProcess);
 
         if (cellInfo.cellType().equals(CellType.MINE)) {
@@ -92,8 +91,8 @@ public class Field {
         openedCells.addAndGet(unOpenedCellsAround.size());
         unOpenedCellsAround.forEach(Cell::open);
         return Stream.concat(unOpenedCellsAround.stream()
-                                .flatMap(this::getUnknownCellInfoSet),
-                        unOpenedCellsAround.stream());
+                        .flatMap(this::getUnknownCellInfoSet),
+                unOpenedCellsAround.stream());
     }
 
     public List<Cell> getAroundCells(Cell cell) {
@@ -145,6 +144,10 @@ public class Field {
 
     public void setCells(Set<Cell> cells) {
         this.cells = cells.stream().collect(Collectors.toMap(cell -> cell, cell -> cell));
+    }
+
+    public int getOpenedCells() {
+        return openedCells.get();
     }
 
     private static class DummyCell extends MineCell {

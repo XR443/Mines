@@ -240,6 +240,33 @@ public class FieldTest {
     }
 
     @Test
+    void processMove_3x3FieldSelectedOneSafeMultipleTimesAnd_SuccessResultGameInProgress() {
+        // GIVEN
+        Field field = new Field(3,
+                3,
+                Set.of(
+                        new MineCell(1, 2),
+                        new MineCell(2, 1),
+                        new MineCell(2, 2)
+                ),
+                createCellsField(3, 3));
+
+        // WHEN
+        field.processMove(new CellButton(2, 0));
+        field.processMove(new CellButton(2, 0));
+        field.processMove(new CellButton(2, 0));
+        field.processMove(new CellButton(2, 0));
+        field.processMove(new CellButton(2, 0));
+        field.processMove(new CellButton(2, 0));
+
+        // THEN
+        assertTrue(field.isGameInProgress());
+        assertNull(field.getWin());
+        assertEquals(6, field.getMoves().size());
+        assertEquals(1, field.getOpenedCells());
+    }
+
+    @Test
     void processMove_3x3FieldSelectedCellWithEmptyCellsAround_SuccessResultGameNotEnded() {
         // GIVEN
         Field field = new Field(3,
