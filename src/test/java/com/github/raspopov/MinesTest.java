@@ -1,7 +1,8 @@
 package com.github.raspopov;
 
-import com.github.raspopov.domain.Cell;
-import com.github.raspopov.domain.Field;
+import com.github.raspopov.model.CellButton;
+import com.github.raspopov.model.Field;
+import com.github.raspopov.service.CellButtonCreator;
 import com.github.raspopov.service.Mines;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,7 @@ public class MinesTest {
 
     @BeforeEach
     void setUp() {
-        mines = new Mines(random);
+        mines = new Mines(random, new CellButtonCreator());
     }
 
     @Test
@@ -49,13 +50,13 @@ public class MinesTest {
 
         // THEN
         assertEquals(8, field.getMines().size());
-        assertFalse(field.getMines().contains(new Cell(1, 1)));
+        assertFalse(field.getMines().contains(new CellButton(1, 1)));
     }
 
     @Test
     void createField_2x2WithRandomHalfFilled_FieldCreated() {
         // GIVEN
-        Mines mines = new Mines();
+        Mines mines = new Mines(new CellButtonCreator());
 
         // WHEN
         Field field = mines.createField(2, 2, .5d);

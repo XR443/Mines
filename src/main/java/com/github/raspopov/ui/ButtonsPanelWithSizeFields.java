@@ -1,5 +1,6 @@
 package com.github.raspopov.ui;
 
+import com.github.raspopov.ui.newUi.MinesPanel;
 import com.github.raspopov.utils.MinesCountEvent;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.event.EventListener;

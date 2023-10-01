@@ -1,7 +1,7 @@
 package com.github.raspopov.frames;
 
 import com.github.raspopov.ui.ButtonsPanel;
-import com.github.raspopov.ui.MinesPanel;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.swing.*;
@@ -10,13 +10,15 @@ import java.awt.*;
 @Component
 public class MinesFrame extends JFrame {
 
-    public MinesFrame(MinesPanel minesPanel, ButtonsPanel buttonsPanel) throws HeadlessException {
+    public MinesFrame(@Qualifier("minesPanel") JPanel minesPanel,
+                      ButtonsPanel buttonsPanel) throws HeadlessException {
         super("Mines");
 
         JPanel mainPane = new JPanel(new BorderLayout());
 
         mainPane.add(buttonsPanel, BorderLayout.NORTH);
-        mainPane.add(minesPanel, BorderLayout.CENTER);
+//        mainPane.add(minesPanel, BorderLayout.CENTER);
+        mainPane.add(new JScrollPane(minesPanel), BorderLayout.CENTER);
 
         add(mainPane, BorderLayout.CENTER);
 

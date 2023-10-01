@@ -1,4 +1,4 @@
-package com.github.raspopov.ui;
+package com.github.raspopov.ui.newUi;
 
 import com.github.raspopov.model.CellButton;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.github.raspopov.domain;
+package com.github.raspopov.model;
 
 public enum CellType {
     MINE,
