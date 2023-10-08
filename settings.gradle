@@ -1,0 +1,4 @@
+rootProject.name = 'Mines'
+
+include 'SwingMines'
+include 'Mines3D'
