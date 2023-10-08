@@ -26,9 +26,9 @@ test {
 }
 
 bootJar {
-    mainClass = 'com.github.raspopov.MinesMain'
+    mainClass = 'com.github.raspopov.SwingMines'
 }
 
 launch4j {
-    mainClassName = 'com.github.raspopov.MinesMain'
+    mainClassName = 'com.github.raspopov.SwingMines'
 }
