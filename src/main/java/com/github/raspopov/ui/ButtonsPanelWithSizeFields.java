@@ -2,6 +2,7 @@ package com.github.raspopov.ui;
 
 import com.github.raspopov.ui.newUi.MinesPanel;
 import com.github.raspopov.utils.MinesCountEvent;
+import com.github.raspopov.utils.WinLoseEvent;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -16,11 +17,15 @@ public class ButtonsPanelWithSizeFields extends ButtonsPanel {
 
     private final JLabel minesCountLabel;
     private final JLabel flaggedMinesCountLabel;
+    private final JLabel resultLabel;
 
     public ButtonsPanelWithSizeFields(MinesPanel minesPanel) {
         super();
         JPanel innerPanel = new JPanel();
         add(innerPanel, BorderLayout.CENTER);
+
+        resultLabel = new JLabel();
+        innerPanel.add(resultLabel);
 
         JButton button = new JButton("Create Field");
 
@@ -30,7 +35,7 @@ public class ButtonsPanelWithSizeFields extends ButtonsPanel {
         innerPanel.add(widthLabel);
 
         JFormattedTextField width = new JFormattedTextField(getNumberFormat());
-        width.setValue(20L);
+        width.setValue(40L);
         width.setColumns(5);
 
         innerPanel.add(width);
@@ -45,6 +50,8 @@ public class ButtonsPanelWithSizeFields extends ButtonsPanel {
         innerPanel.add(height);
 
         button.addActionListener(e -> {
+            resultLabel.setText("");
+
             long widthVal = (long) width.getValue();
             long heightVal = (long) height.getValue();
             minesPanel.createMinesField((int) widthVal, (int) heightVal);
@@ -75,6 +82,12 @@ public class ButtonsPanelWithSizeFields extends ButtonsPanel {
     public void updateMinesCount(MinesCountEvent minesCountEvent) {
         flaggedMinesCountLabel.setText(String.valueOf(minesCountEvent.flaggedMinesCount()));
         minesCountLabel.setText(String.valueOf(minesCountEvent.minesCount()));
+        updateUI();
+    }
+
+    @EventListener
+    public void winLoseLabel(WinLoseEvent winLoseEvent) {
+        resultLabel.setText(winLoseEvent.message());
         updateUI();
     }
 }

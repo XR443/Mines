@@ -23,7 +23,7 @@ public class FieldCreator {
 //                        new Cell(2, 2)
 //                ));
 //        return field;
-        Field field = mines.createField(width, height, 0.2,generatedCells, cellToExclude);
+        Field field = mines.createField(width, height, 0.2, generatedCells, cellToExclude);
         flaggedMinesCount.setMinesCount(field.getMines().size());
         return field;
     }

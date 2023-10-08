@@ -5,6 +5,7 @@ import com.github.raspopov.model.CellButton;
 import com.github.raspopov.model.Field;
 import com.github.raspopov.service.FieldCreator;
 import com.github.raspopov.utils.FlaggedMinesCount;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -19,14 +20,17 @@ public class MinesPanel extends JPanel {
     private final JPanel innerPanel;
     private final FieldCreator fieldCreator;
     private final FlaggedMinesCount flaggedMinesCount;
+    private final ApplicationEventPublisher applicationEventPublisher;
     private Field field;
 
-
-    public MinesPanel(FieldCreator fieldCreator, FlaggedMinesCount flaggedMinesCount) {
+    public MinesPanel(FieldCreator fieldCreator,
+                      FlaggedMinesCount flaggedMinesCount,
+                      ApplicationEventPublisher applicationEventPublisher) {
         super();
 
         this.fieldCreator = fieldCreator;
         this.flaggedMinesCount = flaggedMinesCount;
+        this.applicationEventPublisher = applicationEventPublisher;
 
         innerPanel = new JPanel();
         add(innerPanel, BorderLayout.CENTER);
@@ -54,6 +58,7 @@ public class MinesPanel extends JPanel {
                 height,
                 cells,
                 fieldCreator,
+                applicationEventPublisher,
                 () -> {
                     clear();
                     createMinesField(width, height);

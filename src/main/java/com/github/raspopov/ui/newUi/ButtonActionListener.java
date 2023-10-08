@@ -3,7 +3,9 @@ package com.github.raspopov.ui.newUi;
 import com.github.raspopov.model.*;
 import com.github.raspopov.service.FieldCreator;
 import com.github.raspopov.utils.FlaggedMinesCount;
+import com.github.raspopov.utils.WinLoseEvent;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.context.ApplicationEventPublisher;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,6 +29,7 @@ public class ButtonActionListener extends MouseAdapter implements ActionListener
     private final FieldCreator fieldCreator;
     private final Set<Cell> generatedCells;
     private final FlaggedMinesCount flaggedMinesCount;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     private final Runnable againCallback;
 
@@ -37,6 +40,7 @@ public class ButtonActionListener extends MouseAdapter implements ActionListener
                                 int width, int height,
                                 Set<Cell> generatedCells,
                                 FieldCreator fieldCreator,
+                                ApplicationEventPublisher applicationEventPublisher,
                                 Runnable againCallback,
                                 Runnable cancelCallback) {
         this.flaggedMinesCount = flaggedMinesCount;
@@ -44,6 +48,7 @@ public class ButtonActionListener extends MouseAdapter implements ActionListener
         this.height = height;
         this.fieldCreator = fieldCreator;
         this.generatedCells = generatedCells;
+        this.applicationEventPublisher = applicationEventPublisher;
         this.againCallback = againCallback;
         this.cancelCallback = cancelCallback;
     }
@@ -55,9 +60,7 @@ public class ButtonActionListener extends MouseAdapter implements ActionListener
         if (field == null)
             field = fieldCreator.createField(width, height, generatedCells, cellButton);
 
-        generatedCells.forEach(cell -> {
-            ((CellButton) cell).setField(field);
-        });
+        generatedCells.forEach(cell -> ((CellButton) cell).setField(field));
 
         log.info(cellButton + " Pressed");
 
@@ -75,10 +78,12 @@ public class ButtonActionListener extends MouseAdapter implements ActionListener
     private void processGameResult(Result result) {
         if (field.isGameInProgress() && field.getWin() == null) {
             if (!result.success()) {
-                showPopup(LOSE_MESSAGE);
+//                showPopup(LOSE_MESSAGE);
+                sendWinEvent(false, LOSE_MESSAGE);
             }
         } else if (field.getWin() != null) {
-            showPopup(field.getWin() ? WIN_MESSAGE : LOSE_MESSAGE);
+//            showPopup(field.getWin() ? WIN_MESSAGE : LOSE_MESSAGE);
+            sendWinEvent(field.getWin(), field.getWin() ? WIN_MESSAGE : LOSE_MESSAGE);
         }
     }
 
@@ -155,5 +160,7 @@ public class ButtonActionListener extends MouseAdapter implements ActionListener
         }
     }
 
-
+    private void sendWinEvent(boolean win, String message) {
+        applicationEventPublisher.publishEvent(new WinLoseEvent(win, message.replace("\n", " ")));
+    }
 }
