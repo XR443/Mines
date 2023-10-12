@@ -1,7 +1,5 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.1.4'
-    id "edu.sc.seis.launch4j" version "3.0.5"
 }
 
 repositories {
@@ -9,8 +7,6 @@ repositories {
 }
 
 dependencies {
-    implementation project(':MinesCore')
-
     compileOnly 'org.projectlombok:lombok:1.18.28'
     annotationProcessor 'org.projectlombok:lombok:1.18.28'
 
@@ -25,12 +21,4 @@ dependencies {
 
 test {
     useJUnitPlatform()
-}
-
-bootJar {
-    mainClass = 'com.github.raspopov.SwingMines'
-}
-
-launch4j {
-    mainClassName = 'com.github.raspopov.SwingMines'
 }

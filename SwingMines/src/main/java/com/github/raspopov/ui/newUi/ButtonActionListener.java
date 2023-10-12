@@ -1,7 +1,8 @@
 package com.github.raspopov.ui.newUi;
 
-import com.github.raspopov.model.*;
-import com.github.raspopov.service.FieldCreator;
+import com.github.raspopov.model.Cell;
+import com.github.raspopov.model.CellButton;
+import com.github.raspopov.model.StaticField;
 import com.github.raspopov.utils.FlaggedMinesCount;
 import com.github.raspopov.utils.WinLoseEvent;
 import lombok.extern.log4j.Log4j2;
@@ -14,8 +15,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.Map;
+import java.util.Objects;
 
 @Log4j2
 public class ButtonActionListener extends MouseAdapter implements ActionListener {
@@ -23,11 +24,8 @@ public class ButtonActionListener extends MouseAdapter implements ActionListener
     private static final String WIN_MESSAGE = "You win!\nWant again?";
     private static final String LOSE_MESSAGE = "You lose :(\nWant again?";
 
-    private Field field;
-    private final int width;
-    private final int height;
-    private final FieldCreator fieldCreator;
-    private final Set<Cell> generatedCells;
+    private final StaticField field;
+    private final Map<Integer, CellButton> cellButtonMap;
     private final FlaggedMinesCount flaggedMinesCount;
     private final ApplicationEventPublisher applicationEventPublisher;
 
@@ -37,72 +35,76 @@ public class ButtonActionListener extends MouseAdapter implements ActionListener
 
 
     public ButtonActionListener(FlaggedMinesCount flaggedMinesCount,
-                                int width, int height,
-                                Set<Cell> generatedCells,
-                                FieldCreator fieldCreator,
+                                StaticField field,
                                 ApplicationEventPublisher applicationEventPublisher,
+                                Map<Integer, CellButton> cellButtonMap,
                                 Runnable againCallback,
                                 Runnable cancelCallback) {
         this.flaggedMinesCount = flaggedMinesCount;
-        this.width = width;
-        this.height = height;
-        this.fieldCreator = fieldCreator;
-        this.generatedCells = generatedCells;
+        this.field = field;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.cellButtonMap = cellButtonMap;
         this.againCallback = againCallback;
         this.cancelCallback = cancelCallback;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
+        if (field.isGameEnded())
+            return;
+
         CellButton cellButton = (CellButton) e.getSource();
-
-        if (field == null)
-            field = fieldCreator.createField(width, height, generatedCells, cellButton);
-
-        generatedCells.forEach(cell -> ((CellButton) cell).setField(field));
 
         log.info(cellButton + " Pressed");
 
-        processMove(cellButton);
+        Cell cell = field.cellOf(cellButton.x(), cellButton.y());
+        pressCell(cell);
     }
 
-    private void processMove(Cell cell) {
-        Result result = field.processMove(cell);
+    private void pressCell(Cell pressedCell) {
+        List<Cell> openedCells = pressedCell.open();
+//        generatedCells.forEach(cell -> ((CellButton) cell).setField(field));
 
-        processCellInfoList(result.cells());
-
-        processGameResult(result);
+        processMove(pressedCell, openedCells);
     }
 
-    private void processGameResult(Result result) {
-        if (field.isGameInProgress() && field.getWin() == null) {
-            if (!result.success()) {
-//                showPopup(LOSE_MESSAGE);
-                sendWinEvent(false, LOSE_MESSAGE);
-            }
-        } else if (field.getWin() != null) {
+    private void processMove(Cell pressedCell, List<Cell> cells) {
+        processCells(pressedCell, cells);
+
+        processGameResult();
+    }
+
+    private void processGameResult() {
+        if (field.isGameEnded()) {
 //            showPopup(field.getWin() ? WIN_MESSAGE : LOSE_MESSAGE);
-            sendWinEvent(field.getWin(), field.getWin() ? WIN_MESSAGE : LOSE_MESSAGE);
+
+            sendWinEvent(field.isGameIsWon(), field.isGameIsWon() ? WIN_MESSAGE : LOSE_MESSAGE);
         }
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
+        if (field.isGameEnded())
+            return;
+
         CellButton cellButton = (CellButton) e.getSource();
+
+        Cell cell = field.cellOf(cellButton.x(), cellButton.y());
+        cellButton.setCell(cell);
 
         if (cellButton.isOpen()) {
             if (e.getButton() == MouseEvent.BUTTON1) {
-                CellInfo cellInfo = cellButton.getCellInfo().get();
-                List<Cell> aroundCells = field.getAroundCells(cellButton);
-                if (cellInfo.minesAround() == aroundCells.stream()
-                        .filter(Cell::isFlagged)
+                List<Cell> aroundCells = cell.getAroundCells();
+                if (cell.getMinesAround() == aroundCells.stream()
+                        .map(c -> cellButtonMap.get(Objects.hash(c.x(), c.y())))
+                        .filter(CellButton::isFlagged)
                         .count())
                     for (Cell aroundCell : aroundCells.stream()
-                            .filter(cell -> !cell.isFlagged())
+                            .filter(c -> !cellButtonMap.get(Objects.hash(c.x(), c.y())).isFlagged())
                             .toList()) {
-                        if (field.isGameInProgress())
-                            processMove(aroundCell);
+                        if (field.isGameInProgress() && !aroundCell.isOpen()) {
+                            pressCell(aroundCell);
+                        }
                     }
             }
             return;
@@ -122,15 +124,10 @@ public class ButtonActionListener extends MouseAdapter implements ActionListener
         }
     }
 
-    private void processCellInfoList(List<Cell> cells) {
-        if (cells.stream()
-                .map(Cell::getCellInfo)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .map(CellInfo::cellType)
-                .anyMatch(CellType.MINE::equals)) {
+    private void processCells(Cell pressedCell, List<Cell> cells) {
+        if (pressedCell.isMine()) {
             cells.stream()
-                    .map(cell -> (CellButton) field.getCells().get(cell))
+                    .map(cell -> cellButtonMap.get(Objects.hash(cell.x(), cell.y())))
                     .forEach(cellButton -> {
                         cellButton.setText("*");
                         cellButton.setForeground(Color.RED);
@@ -139,10 +136,14 @@ public class ButtonActionListener extends MouseAdapter implements ActionListener
         }
 
         cells.stream()
-                .map(cell -> (CellButton) field.getCells().get(cell))
-                .filter(cellButton -> cellButton.getCellInfo().isPresent())
+                .map(cell -> {
+                    CellButton cellButton = cellButtonMap.get(Objects.hash(cell.x(), cell.y()));
+                    cellButton.setCell(cell);
+                    return cellButton;
+                })
                 .forEach(cellButton -> {
-                    cellButton.setText(String.valueOf(cellButton.getCellInfo().get().minesAround()));
+                    cellButton.setText(String.valueOf(cellButton.getCell().getMinesAround()));
+                    cellButton.open();
                     cellButton.updateBackground();
                     cellButton.repaint();
                 });

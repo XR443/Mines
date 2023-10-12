@@ -1,8 +1,7 @@
 package com.github.raspopov.ui.newUi;
 
-import com.github.raspopov.model.Cell;
 import com.github.raspopov.model.CellButton;
-import com.github.raspopov.model.Field;
+import com.github.raspopov.model.StaticField;
 import com.github.raspopov.service.FieldCreator;
 import com.github.raspopov.utils.FlaggedMinesCount;
 import org.springframework.context.ApplicationEventPublisher;
@@ -11,8 +10,8 @@ import org.springframework.stereotype.Component;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Objects;
 
 @Component
 @Primary
@@ -21,7 +20,7 @@ public class MinesPanel extends JPanel {
     private final FieldCreator fieldCreator;
     private final FlaggedMinesCount flaggedMinesCount;
     private final ApplicationEventPublisher applicationEventPublisher;
-    private Field field;
+    private StaticField field;
 
     public MinesPanel(FieldCreator fieldCreator,
                       FlaggedMinesCount flaggedMinesCount,
@@ -37,11 +36,6 @@ public class MinesPanel extends JPanel {
         setBorder(BorderFactory.createLineBorder(Color.BLACK));
     }
 
-    public void createMinesField(Field field) {
-        this.field = field;
-        createMinesField(field.getWidth(), field.getHeight());
-    }
-
     private void clear() {
         innerPanel.removeAll();
         this.field = null;
@@ -52,13 +46,13 @@ public class MinesPanel extends JPanel {
     public void createMinesField(int width, int height) {
         clear();
 
-        Set<Cell> cells = new HashSet<>();
+        field = fieldCreator.createField(width, height);
+
+        HashMap<Integer, CellButton> cellButtonMap = new HashMap<>();
         ButtonActionListener buttonActionListener = new ButtonActionListener(flaggedMinesCount,
-                width,
-                height,
-                cells,
-                fieldCreator,
+                field,
                 applicationEventPublisher,
+                cellButtonMap,
                 () -> {
                     clear();
                     createMinesField(width, height);
@@ -69,9 +63,9 @@ public class MinesPanel extends JPanel {
         innerPanel.setLayout(new GridLayout(height, width));
 
         Dimension preferredSize = new Dimension(45, 45);
-        for (int j = 0; j < height; j++) {
-            for (int i = 0; i < width; i++) {
-                CellButton button = new CellButton(i, j);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                CellButton button = new CellButton(x, y, cellButtonMap);
 
                 button.addActionListener(buttonActionListener);
                 button.addMouseListener(buttonActionListener);
@@ -80,7 +74,8 @@ public class MinesPanel extends JPanel {
 
                 button.setPreferredSize(preferredSize);
                 innerPanel.add(button);
-                cells.add(button);
+
+                cellButtonMap.put(Objects.hash(x, y), button);
             }
         }
     }

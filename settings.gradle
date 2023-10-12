@@ -1,4 +1,5 @@
 rootProject.name = 'Mines'
 
+include 'MinesCore'
 include 'SwingMines'
 include 'Mines3D'

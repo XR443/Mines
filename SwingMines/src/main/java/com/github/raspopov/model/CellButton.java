@@ -1,37 +1,42 @@
 package com.github.raspopov.model;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public class CellButton extends JButton implements Cell {
+@RequiredArgsConstructor
+public class CellButton extends JButton {
     private final int x;
     private final int y;
+    private final Map<Integer, CellButton> cellButtonMap;
+
+    @Getter
+    @Setter
+    private Cell cell;
 
     private boolean flagged;
-    private boolean disabled;
     private boolean opened;
-    private Optional<Field> field = Optional.empty();
-    private CellInfo cellInfo;
 
-    public CellButton(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
+//    public CellButton(int x, int y) {
+//        this.x = x;
+//        this.y = y;
+//    }
 
-    @Override
     public int x() {
         return x;
     }
 
-    @Override
     public int y() {
         return y;
     }
 
-    @Override
     public void setFlag(boolean flag) {
         this.flagged = flag;
         super.setEnabled(!flag);
@@ -41,18 +46,17 @@ public class CellButton extends JButton implements Cell {
     }
 
     private void updateNeighbourBackground() {
-        field.ifPresent(f -> f.getAroundCells(this).stream()
-                .map(c -> (CellButton) c)
-                .peek(CellButton::updateBackground)
-                .forEach(CellButton::repaint));
+        Optional.ofNullable(cell)
+                .ifPresent(c -> c.getAroundCells().stream()
+                        .map(cell -> cellButtonMap.get(Objects.hash(cell.x(), cell.y())))
+                        .peek(CellButton::updateBackground)
+                        .forEach(CellButton::repaint));
     }
 
-    @Override
     public boolean isFlagged() {
         return flagged;
     }
 
-    @Override
     public void open() {
         opened = true;
         flagged = false;
@@ -61,15 +65,10 @@ public class CellButton extends JButton implements Cell {
         updateNeighbourBackground();
     }
 
-    @Override
     public boolean isOpen() {
         return opened;
     }
 
-    @Override
-    public Optional<CellInfo> getCellInfo() {
-        return Optional.ofNullable(cellInfo);
-    }
 
     private final Color backgroundColor = new Color(238, 238, 238);
     private final Color notAllMinesFind = new Color(255, 172, 172);
@@ -84,14 +83,14 @@ public class CellButton extends JButton implements Cell {
             return;
         }
 
-        if (cellInfo == null || !isOpen() || field.isEmpty()) {
+        if (cell == null || !isOpen()) {
             backgroundColorCustom = super.getBackground();
             return;
         }
 
-        int minesAround = cellInfo.minesAround();
-        List<CellButton> aroundCells = field.get().getAroundCells(this).stream()
-                .map(c -> (CellButton) c)
+        int minesAround = cell.getMinesAround();
+        List<CellButton> aroundCells = cell.getAroundCells().stream()
+                .map(c -> cellButtonMap.get(Objects.hash(c.x(), c.y())))
                 .toList();
 
         long flaggedAround = aroundCells.stream()
@@ -125,14 +124,6 @@ public class CellButton extends JButton implements Cell {
         return backgroundColorCustom;
     }
 
-    public void setField(Field field) {
-        this.field = Optional.ofNullable(field);
-    }
-
-    @Override
-    public void setCellInfo(CellInfo cellInfo) {
-        this.cellInfo = cellInfo;
-    }
 
     @Override
     public boolean equals(Object obj) {
